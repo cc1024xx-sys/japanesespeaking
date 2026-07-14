@@ -1018,6 +1018,35 @@ textarea {
   flex-wrap: wrap;
 }
 
+.pattern-detail-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.pattern-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pattern-edit-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.pattern-edit-input {
+  width: 100%;
+  font-family: var(--font-jp);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pattern-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
 .pattern-card-list {
   display: flex;
   flex-direction: column;

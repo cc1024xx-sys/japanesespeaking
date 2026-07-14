@@ -1,16 +1,30 @@
 import { useMemo, useState } from 'react'
 import type { PatternCardRef, Scenario } from '../types'
-import { collectPatterns, flashcardsFromRefs } from '../utils/patterns'
+import {
+  collectPatterns,
+  flashcardsFromRefs,
+  normalizePattern,
+} from '../utils/patterns'
 
 interface PatternBrowserProps {
   scenarios: Scenario[]
   onBack: () => void
   onStudyPattern: (pattern: string, cards: ReturnType<typeof flashcardsFromRefs>) => void
+  onRenamePattern: (oldPattern: string, newPattern: string) => void
+  onDeletePattern: (pattern: string) => void
 }
 
-export default function PatternBrowser({ scenarios, onBack, onStudyPattern }: PatternBrowserProps) {
+export default function PatternBrowser({
+  scenarios,
+  onBack,
+  onStudyPattern,
+  onRenamePattern,
+  onDeletePattern,
+}: PatternBrowserProps) {
   const [query, setQuery] = useState('')
   const [selectedPattern, setSelectedPattern] = useState<string | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editDraft, setEditDraft] = useState('')
 
   const entries = useMemo(() => collectPatterns(scenarios), [scenarios])
 
@@ -25,9 +39,54 @@ export default function PatternBrowser({ scenarios, onBack, onStudyPattern }: Pa
     [entries, selectedPattern],
   )
 
+  function handleSelect(pattern: string) {
+    setSelectedPattern(pattern)
+    setIsEditing(false)
+    setEditDraft('')
+  }
+
   function handleStudy(items: PatternCardRef[]) {
     if (!selectedPattern) return
     onStudyPattern(selectedPattern, flashcardsFromRefs(items))
+  }
+
+  function startEditing() {
+    if (!selectedEntry) return
+    setEditDraft(selectedEntry.pattern)
+    setIsEditing(true)
+  }
+
+  function cancelEditing() {
+    setIsEditing(false)
+    setEditDraft('')
+  }
+
+  function handleSaveEdit() {
+    if (!selectedEntry) return
+    const next = normalizePattern(editDraft)
+    if (!next) {
+      alert('句式不能为空')
+      return
+    }
+    if (next === selectedEntry.pattern) {
+      cancelEditing()
+      return
+    }
+    onRenamePattern(selectedEntry.pattern, next)
+    setSelectedPattern(next)
+    cancelEditing()
+  }
+
+  function handleDelete() {
+    if (!selectedEntry) return
+    const confirmed = confirm(
+      `确定删除句式「${selectedEntry.pattern}」吗？\n\n将从 ${selectedEntry.items.length} 张闪卡中移除，此操作不可撤销。`,
+    )
+    if (!confirmed) return
+    onDeletePattern(selectedEntry.pattern)
+    setSelectedPattern(null)
+    setIsEditing(false)
+    setEditDraft('')
   }
 
   return (
@@ -64,7 +123,7 @@ export default function PatternBrowser({ scenarios, onBack, onStudyPattern }: Pa
                   key={entry.pattern}
                   type="button"
                   className={`pattern-list-item${selectedPattern === entry.pattern ? ' active' : ''}`}
-                  onClick={() => setSelectedPattern(entry.pattern)}
+                  onClick={() => handleSelect(entry.pattern)}
                 >
                   <span className="pattern-list-label">{entry.pattern}</span>
                   <span className="pattern-list-count">{entry.items.length} 张</span>
@@ -87,23 +146,67 @@ export default function PatternBrowser({ scenarios, onBack, onStudyPattern }: Pa
             ) : (
               <>
                 <div className="pattern-detail-header">
-                  <div>
-                    <div className="panel-title" style={{ marginBottom: '0.25rem' }}>
-                      {selectedEntry.pattern}
-                    </div>
+                  <div className="pattern-detail-info">
+                    {isEditing ? (
+                      <div className="pattern-edit-row">
+                        <input
+                          className="pattern-edit-input"
+                          value={editDraft}
+                          onChange={(e) => setEditDraft(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault()
+                              handleSaveEdit()
+                            }
+                            if (e.key === 'Escape') cancelEditing()
+                          }}
+                          autoFocus
+                        />
+                        <div className="pattern-edit-actions">
+                          <button
+                            type="button"
+                            className="btn btn-primary"
+                            onClick={handleSaveEdit}
+                          >
+                            保存
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={cancelEditing}
+                          >
+                            取消
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="panel-title" style={{ marginBottom: '0.25rem' }}>
+                        {selectedEntry.pattern}
+                      </div>
+                    )}
                     <p className="form-hint">
                       关联 {selectedEntry.items.length} 张闪卡
                       {new Set(selectedEntry.items.map((i) => i.scenarioId)).size > 1 &&
                         ` · 跨 ${new Set(selectedEntry.items.map((i) => i.scenarioId)).size} 个场景`}
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => handleStudy(selectedEntry.items)}
-                  >
-                    学习此句式
-                  </button>
+                  {!isEditing && (
+                    <div className="pattern-detail-actions">
+                      <button
+                        type="button"
+                        className="btn btn-primary"
+                        onClick={() => handleStudy(selectedEntry.items)}
+                      >
+                        学习此句式
+                      </button>
+                      <button type="button" className="btn btn-secondary" onClick={startEditing}>
+                        修改
+                      </button>
+                      <button type="button" className="btn btn-ghost btn-danger" onClick={handleDelete}>
+                        删除
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="pattern-card-list">

@@ -97,3 +97,48 @@ export function flashcardsFromRefs(refs: PatternCardRef[]): Flashcard[] {
 
   return cards
 }
+
+export function removePatternFromScenarios(scenarios: Scenario[], pattern: string): Scenario[] {
+  const key = normalizePattern(pattern)
+  if (!key) return scenarios
+
+  const now = Date.now()
+  return scenarios.map((scenario) => {
+    const cards = scenario.cards.map((card) => ({
+      ...card,
+      patterns: (card.patterns ?? []).filter((p) => normalizePattern(p) !== key),
+    }))
+    const changed = cards.some(
+      (card, index) => card.patterns.length !== (scenario.cards[index].patterns ?? []).length,
+    )
+    return changed ? { ...scenario, cards, updatedAt: now } : scenario
+  })
+}
+
+export function renamePatternInScenarios(
+  scenarios: Scenario[],
+  oldPattern: string,
+  newPattern: string,
+): Scenario[] {
+  const oldKey = normalizePattern(oldPattern)
+  const newKey = normalizePattern(newPattern)
+  if (!oldKey || !newKey || oldKey === newKey) return scenarios
+
+  const now = Date.now()
+  return scenarios.map((scenario) => {
+    let changed = false
+    const cards = scenario.cards.map((card) => {
+      const patterns = card.patterns ?? []
+      if (!patterns.some((p) => normalizePattern(p) === oldKey)) return card
+      changed = true
+      return {
+        ...card,
+        patterns: mergePatterns(
+          [],
+          patterns.map((p) => (normalizePattern(p) === oldKey ? newKey : p)),
+        ),
+      }
+    })
+    return changed ? { ...scenario, cards, updatedAt: now } : scenario
+  })
+}

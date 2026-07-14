@@ -6,6 +6,7 @@ import ScenarioList from './components/ScenarioList'
 import ScenarioEditor from './components/ScenarioEditor'
 import FlashcardStudy from './components/FlashcardStudy'
 import PatternBrowser from './components/PatternBrowser'
+import { removePatternFromScenarios, renamePatternInScenarios } from './utils/patterns'
 
 export default function App() {
   const [scenarios, setScenarios] = useState<Scenario[]>([])
@@ -40,6 +41,14 @@ export default function App() {
 
   function handleDelete(id: string) {
     persist(scenarios.filter((s) => s.id !== id))
+  }
+
+  function handleRenamePattern(oldPattern: string, newPattern: string) {
+    persist(renamePatternInScenarios(scenarios, oldPattern, newPattern))
+  }
+
+  function handleDeletePattern(pattern: string) {
+    persist(removePatternFromScenarios(scenarios, pattern))
   }
 
   function startStudy(title: string, cards: Flashcard[]) {
@@ -91,6 +100,8 @@ export default function App() {
           onStudyPattern={(pattern, cards) => {
             startStudy(`句式：${pattern}`, cards)
           }}
+          onRenamePattern={handleRenamePattern}
+          onDeletePattern={handleDeletePattern}
         />
       )}
 
