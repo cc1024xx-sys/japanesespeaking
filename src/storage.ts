@@ -2,9 +2,13 @@ import type { Scenario } from './types'
 
 const STORAGE_KEY = 'japanese-speaking-scenarios'
 
-function normalizeScenario(scenario: Scenario): Scenario {
+export function normalizeScenario(scenario: Scenario): Scenario {
+  const now = Date.now()
   return {
     ...scenario,
+    description: scenario.description ?? '',
+    createdAt: typeof scenario.createdAt === 'number' ? scenario.createdAt : now,
+    updatedAt: typeof scenario.updatedAt === 'number' ? scenario.updatedAt : now,
     cards: scenario.cards.map((card) => ({
       ...card,
       notes: card.notes ?? '',

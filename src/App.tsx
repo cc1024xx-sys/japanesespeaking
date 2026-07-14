@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Flashcard, Scenario, View } from './types'
 import { createScenario, loadScenarios, saveScenarios } from './storage'
+import DataBackup from './components/DataBackup'
 import ScenarioList from './components/ScenarioList'
 import ScenarioEditor from './components/ScenarioEditor'
 import FlashcardStudy from './components/FlashcardStudy'
@@ -62,22 +63,25 @@ export default function App() {
       </header>
 
       {view === 'home' && (
-        <ScenarioList
-          scenarios={scenarios}
-          onCreate={handleCreate}
-          onPatterns={() => setView('patterns')}
-          onEdit={(id) => {
-            setActiveId(id)
-            setView('edit')
-          }}
-          onStudy={(id) => {
-            const scenario = scenarios.find((s) => s.id === id)
-            if (!scenario) return
-            setActiveId(id)
-            startStudy(scenario.name, scenario.cards)
-          }}
-          onDelete={handleDelete}
-        />
+        <>
+          <ScenarioList
+            scenarios={scenarios}
+            onCreate={handleCreate}
+            onPatterns={() => setView('patterns')}
+            onEdit={(id) => {
+              setActiveId(id)
+              setView('edit')
+            }}
+            onStudy={(id) => {
+              const scenario = scenarios.find((s) => s.id === id)
+              if (!scenario) return
+              setActiveId(id)
+              startStudy(scenario.name, scenario.cards)
+            }}
+            onDelete={handleDelete}
+          />
+          <DataBackup scenarios={scenarios} onImport={persist} />
+        </>
       )}
 
       {view === 'patterns' && (

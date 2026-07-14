@@ -1070,3 +1070,27 @@ textarea {
   gap: 0.3rem;
   margin-top: 0.45rem;
 }
+
+.data-backup-panel {
+  margin-top: 1.25rem;
+}
+
+.data-backup-desc {
+  margin-bottom: 1rem;
+}
+
+.data-backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.data-backup-hint {
+  margin-top: 0.75rem;
+}
+
+.data-backup-message {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--success);
+}
